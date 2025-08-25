@@ -1,0 +1,5 @@
+analysis/
+venv-forecast1/
+.DS_Store
+code/__pycache__/
+*.py[cod]
