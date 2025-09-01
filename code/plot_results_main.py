@@ -149,7 +149,7 @@ def plot_decadal_metric():
 
     for i, metric in enumerate(selected_metrics_decadal):
         gdf = gdf_base.copy()
-        main_color = hex_colors[3] #hex_colors[0]
+        main_color = hex_colors[3]
 
         # Define color normalization
         vmin_90_10, vmax_90_10 = np.percentile(gdf[metric], [10, 90])
@@ -160,7 +160,6 @@ def plot_decadal_metric():
             norm = Normalize(vmin=vmin_90_10, vmax=vmax_90_10)
             cmap = LinearSegmentedColormap.from_list("custom_cmap", ['mediumblue', 'white'])
         else:
-            #norm = CenteredNorm(vcenter=0, halfrange=max(abs(vmin_90_10), abs(vmax_90_10)))
             max_range = max(abs(vmin_90_10), abs(vmax_90_10))
             norm = TwoSlopeNorm(vmin=-max_range, vcenter=0, vmax=max_range)
             cmap = LinearSegmentedColormap.from_list("custom_cmap", ['mediumblue', 'white', 'firebrick'])
@@ -458,12 +457,10 @@ def plot_global_params_mu_ld15():
                     ax.set_ylabel(met, fontsize=12)
 
     # Tight layout and save
-    #plt.tight_layout()
-    plt.tight_layout(rect=[0, 0.1, 1, 1])  # leave some space at bottom (5%)
+    plt.tight_layout(rect=[0, 0.1, 1, 1]) 
 
 
-    # Add legend:
-    # Create a shared legend for the whole figure (use final palette + labels from last plot)
+    # Add legend - shared legend for the whole figure (use final palette + labels from last plot)
     handles = [
         mlines.Line2D([0], [0], color=custom_palette[i], lw=4)
         for i in range(len(model_legend_labels))
@@ -472,9 +469,7 @@ def plot_global_params_mu_ld15():
         handles,
         model_legend_labels,
         title="Predictors",
-        # loc="center left",
-        # bbox_to_anchor=(1.00, 0.5),
-        loc="lower center",                # ← move to bottom center
+        loc="lower center",
         bbox_to_anchor=(0.5, -0.02),
         fontsize="medium",
         title_fontsize="medium",
@@ -504,7 +499,6 @@ def plot_mu_wet_time_lead_comp():
 
     # Define the labeller to map 'mu_wet' and 'mu_time' to custom labels
     labeller = azl.mix_labellers((azl.MapLabeller, azl.DimCoordLabeller, azl.NoModelLabeller))(var_name_map={"mu_wet": r"$\mu$ wet", "mu_time": r"$\mu$ time"})
-
 
     # Iterate through each metric and subplot
     for i, met in enumerate(selected_metrics):
@@ -561,7 +555,6 @@ def plot_mu_wet_time_lead_comp():
 
 
     # Adjust layout to prevent overlapping of titles and axes labels
-    #plt.tight_layout()
     plt.tight_layout(rect=[0, 0, 0.88, 1])
 
     # Shared legend to the right of the whole figure
@@ -597,7 +590,6 @@ def plot_model_comp_waic():
 
         for i, (ax, met) in enumerate(zip(axes, selected_metrics)):  # Loop through metrics and subplots
             model_results_traces = {}
-            # model_list_filtered = [model for model in model_list if f"{met}_*_ld{lead}" in model]
 
             pattern = re.compile(f"{met}_.+_ld{lead}")
             model_list_filtered = [model for model in model_list if pattern.fullmatch(model)]
@@ -671,7 +663,6 @@ def plot_model_comp_waic():
 def plot_model_comp_waic_ld15():
     leads = [1, 5]
     n_rows = len(selected_metrics)
-    # fig, axes = plt.subplots(n_rows, 2, figsize=(14, 4 * n_rows), sharey=False)
     fig, axes = plt.subplots(n_rows, 2, figsize=(12, 3.5 * n_rows), sharey=False)
 
     if n_rows == 1:
@@ -750,7 +741,7 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
     selected_metrics = ['RMSE', 'eCRPS_mean', 'rel']
     leads = [1, 5]
     fig, axes = plt.subplots(2, 3, figsize=(14, 10))
-    axes = axes.reshape(2, 3)  # Now accessible by [row][col]
+    axes = axes.reshape(2, 3) 
 
     for row_idx, lead in enumerate(leads):
         for col_idx, met in enumerate(selected_metrics):
@@ -785,8 +776,8 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
 
             min_val, max_val = gdf['posterior_param_medians'].min(), gdf['posterior_param_medians'].max()
         
-            pos_color = hex_dark_yellow #'#f0880b' #yellow, the 25% darker one but not more saturated
-            neg_color = hex_dark_blue #'#3d66bd' #blue, 53% saturated, 15% darker
+            pos_color = hex_dark_yellow
+            neg_color = hex_dark_blue
             neutral_color = 'white'
 
             
@@ -798,7 +789,6 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
                 norm = Normalize(vmin=min_val, vmax=max_val)
                 colors = [neg_color, neutral_color]
             else:
-                #norm = CenteredNorm(vcenter=0, halfrange=max(abs(min_val), abs(max_val)))
                 max_range = max(abs(min_val), abs(max_val))
                 norm = TwoSlopeNorm(vmin=-max_range, vcenter=0, vmax=max_range)
                 colors = [neg_color, neutral_color, pos_color]
@@ -1206,10 +1196,7 @@ def plot_basinchar_effects_horizontal(model_results, folder_path):
         )
 
         # Adjust layout to make space for legend below
-        plt.tight_layout(rect=[0, 0.15, 1, 1])  # leave room at bottom
-
-
-        #plt.tight_layout()
+        plt.tight_layout(rect=[0, 0.15, 1, 1])
         
         filename = folder_path / f"Basinchar_effect_{effect_label.lower()}_horz.png"
         plt.savefig(filename, dpi=300)
@@ -1378,8 +1365,6 @@ Convergence checks:
 global_params = ['mu_wet', 'mu_time', 'mu_GEFS', 'mu_AR', 'ln_sigma_y_0', 'ln_sigma_y_num_events', 'sigma_wet', 'sigma_time', 'sigma_AR', 'sigma_GEFS']
 site_specific_params = ['alpha', 'beta_wet', 'beta_time', 'beta_AR', 'beta_GEFS', 'sigma_y', 'y_like']
 
-
-
 def plot_trace_global_chains(global_vars=global_params, num_chains=4):
     for model_name, res in model_results.items():
         trace = res['trace']
@@ -1501,7 +1486,7 @@ for agg_type in aggregation_periods:
         folder_path = plots_path / f'plots_{agg_type}_Thresh{flow}/'
         folder_path.mkdir(parents=True, exist_ok=True)
 
-        # model_results, model_list = compile_model_results()
+        model_results, model_list = compile_model_results()
 
         metric_path = metric_folder / f"metrics_{agg_type}_Thresh{flow}.csv"
         decade_metric_path = metric_folder / f"metrics_{agg_type}_Thresh{flow}_decade.csv"
@@ -1517,75 +1502,72 @@ for agg_type in aggregation_periods:
             continue
 
         selected_sites = df_metric['site'].unique().tolist()
-        # selected_sites_decadal = df_metric_decade['site'].unique().tolist()
+        selected_sites_decadal = df_metric_decade['site'].unique().tolist()
 
-        # # Verify length of chains (number of posterior draws)
-        # num_draws = model_results[model_list[0]]['trace'].posterior.draw.shape[0]
-        # logger.log(f"Number of posterior draws: {num_draws}")
+        # Verify length of chains (number of posterior draws)
+        num_draws = model_results[model_list[0]]['trace'].posterior.draw.shape[0]
+        logger.log(f"Number of posterior draws: {num_draws}")
         
 
-        # # PLOTS:
-        # plot_decadal_metric()
-        # plot_mu_wet_time_lead_comp()
-        # plot_model_comp_waic()
-        # plot_model_comp_waic_ld15()
-        # plot_beta_time_maps()
-        # #plot_beta_time_positive()
+        # PLOTS:
+        plot_decadal_metric()
+        plot_mu_wet_time_lead_comp()
+        plot_model_comp_waic()
+        plot_model_comp_waic_ld15()
+        plot_beta_time_maps()
+        #plot_beta_time_positive()
 
         # plot illustration of wetness and forecast skill relationship:
-        #plot_wetness_skill_illustration(df_metric, folder_path)
+        plot_wetness_skill_illustration(df_metric, folder_path)
         sites_for_illustration = ['AHOC1', 'BRGC1', 'COTC1', 'DLTC1', 'DOSC1', 'GYRC1', 'HAPC1', 'SEIC1', 'YDRC1']
         plot_wetness_skill_illustration_subset(df_metric, folder_path, lead_time=1,
                                            sel_metric='eCRPS_mean', sel_metric_label='eCRPS', sel_metric_units= '(cfs)',
                                            sites=sites_for_illustration)
 
+        # checking for multicollinearity; examining other params besides wet time:
+        folder_path_global_params = folder_path / 'global_params'
+        folder_path_global_params.mkdir(parents=True, exist_ok=True)
+        plot_global_params_all()
+        plot_global_params_mu()
+        plot_global_params_mu_ld15()
 
+        # Convergence checks:
+        if config.check_convergence:
+            folder_path_convergence = folder_path /'convergence'
+            folder_path_convergence.mkdir(parents=True, exist_ok=True)
+            plot_trace_global_chains()
+            summarize_rhat_ess_global()
+            # summarize_rhat_ess_site()
+            # get_summaries_save()
 
-        # # checking for multicollinearity; examining other params besides wet time:
-        # folder_path_global_params = folder_path / 'global_params'
-        # folder_path_global_params.mkdir(parents=True, exist_ok=True)
-        # plot_global_params_all()
-        # plot_global_params_mu()
-        # plot_global_params_mu_ld15()
+        # Basin characteristic plots
+        if basin_char:
+            try:
+                folder_path = plots_path / f'plots_{agg_type}_Thresh{flow}_basinchar'
+                folder_path.mkdir(parents=True, exist_ok=True)
 
-        # # Convergence checks:
-        # if config.check_convergence:
-        #     folder_path_convergence = folder_path /'convergence'
-        #     folder_path_convergence.mkdir(parents=True, exist_ok=True)
-        #     plot_trace_global_chains()
-        #     summarize_rhat_ess_global()
-        #     # summarize_rhat_ess_site()
-        #     # get_summaries_save()
+                model_results_basin_char, model_list_basin_char = compile_model_results_basinchar()
 
-
-        # # Basin characteristic plots — safely wrapped
-        # if basin_char:
-        #     try:
-        #         folder_path = plots_path / f'plots_{agg_type}_Thresh{flow}_basinchar'
-        #         folder_path.mkdir(parents=True, exist_ok=True)
-
-        #         model_results_basin_char, model_list_basin_char = compile_model_results_basinchar()
-
-        #         summarize_basinchar_coeffs(model_results_basin_char, folder_path)
-        #         plot_basinchar_effects(model_results_basin_char, folder_path)
-        #         plot_basinchar_effects_horizontal(model_results_basin_char, folder_path)
-        #         plot_model_comp_waic_with_basinchar(
-        #             model_results=model_results,
-        #             model_results_basin_char=model_results_basin_char,
-        #             model_list=model_list,
-        #             model_list_basin_char=model_list_basin_char,
-        #             folder_path=folder_path
-        #         )
-        #         plot_model_comp_waic_ld15_with_basinchar(
-        #             model_results=model_results,
-        #             model_results_basin_char=model_results_basin_char,
-        #             model_list=model_list,
-        #             model_list_basin_char=model_list_basin_char,
-        #             folder_path=folder_path
-        #         )
+                summarize_basinchar_coeffs(model_results_basin_char, folder_path)
+                plot_basinchar_effects(model_results_basin_char, folder_path)
+                plot_basinchar_effects_horizontal(model_results_basin_char, folder_path)
+                plot_model_comp_waic_with_basinchar(
+                    model_results=model_results,
+                    model_results_basin_char=model_results_basin_char,
+                    model_list=model_list,
+                    model_list_basin_char=model_list_basin_char,
+                    folder_path=folder_path
+                )
+                plot_model_comp_waic_ld15_with_basinchar(
+                    model_results=model_results,
+                    model_results_basin_char=model_results_basin_char,
+                    model_list=model_list,
+                    model_list_basin_char=model_list_basin_char,
+                    folder_path=folder_path
+                )
                 
-        #     except Exception as e:
-        #         logger.log(f"Error in basin characteristic plotting for agg_type={agg_type}, threshold={flow}: {e}")
-        #         continue
+            except Exception as e:
+                logger.log(f"Error in basin characteristic plotting for agg_type={agg_type}, threshold={flow}: {e}")
+                continue
 
 logger.end()
