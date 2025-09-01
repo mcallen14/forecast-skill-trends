@@ -4,12 +4,6 @@ Madeline Allen
 Code last updated: 7/16/2025
 Script purpose: explore reliability statistic sensitivity to number of events for a given site and water year
 
-Steinschneider Lab Group
-
-Madeline Allen
-
-Code last updated: 7/16/2025
-
 Goal: understand the sampling variability of reliability statistic – as the number of flow events 
 considered in the metric calculation increases – the metric converges towards a given “underlying” performance. 
 

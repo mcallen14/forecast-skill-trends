@@ -4,7 +4,6 @@ Madeline Allen
 Code last updated: 7/16/2025
 Script purpose: Find NWS USGS Site Pairs
 
-
 The following script downloads tables for states in the study region specified in 
 define_key_variables.txt. The tables are used to compile a list of possible sites that 
 could have CNRFC forecasts and USGS observed streamflow.

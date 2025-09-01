@@ -22,11 +22,6 @@ from pathlib import Path
 CONFIG_DIR = Path(__file__).resolve().parent
 BASE_DIR = CONFIG_DIR.parent
 
-
-# # #TEST sd ed:
-# start_date = '2023-01-01' 
-# end_date = '2023-01-10' 
-
 # Start date and end date for analysis:
 start_date = '2013-09-01' # a month before the start of WY2014
 end_date = '2025-05-31' 
