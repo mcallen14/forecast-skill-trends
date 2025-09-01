@@ -122,7 +122,7 @@ model_configs = {
 # Bayesian model tuning and sampling params:
 prior_samples = 1000
 tuning_samples = 10000 #ideally tune = 10000
-posterior_samples =10000
+posterior_samples =10000 #ideally posterior = 10000
 
 number_chains = 4
 
