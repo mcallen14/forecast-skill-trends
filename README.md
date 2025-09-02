@@ -7,7 +7,7 @@ This repository contains code and data processing workflows for analyzing the pe
 ## Repository Structure
 
 - `code/` – Scripts for retrieving and processing forecast, observed, and auxiliary datasets; calculating skill metrics and running regression models.
-- `analysis/data/` – Where datasets are stored after downloading and cleaning; calculated metrics are also stored within this folder.
+- `analysis/data/` – Where datasets are stored after downloading and cleaning; calculated metrics are also stored within this folder. This folder and all its contents are available from a Zenodo dataset repository (Allen, 2025; DOI: 10.5281/zenodo.17024920).
 - `analysis/log/` – Where log of print and error statements for each script are saved.
 - `analysis/bayesian_traces/` – Where prior and posterior traces from Bayesian models are stored.
 - `analysis/plots/` – Model outputs, tables, and summary statistics.
@@ -61,8 +61,9 @@ We use four primary datasets:
    - Summed over the three days preceding each forecast issue date.  
 
 4. **Watershed Characteristics (Falcone, 2011)**  
-   - Subset of Gages-II attributes: mean annual precipitation, mean elevation, relief ratio, log drainage area, number of upstream dams, and permeability.  
+   - Subset of Gages-II attributes: mean annual precipitation, mean elevation, relief ratio, log drainage area, number of upstream dams, and permeability.
 
+  
 ---
 
 ## Methodology
@@ -124,24 +125,33 @@ Key additional elements, explained within the scripts and the associated paper (
   bash setup_venv-forecast1_withpymc.sh
   ```
 
-3. **Run analysis:**
-Either run the scripts individually in the order listed above in the Key Scripts section, or run all scripts using one of the two scripts below, based on operating system.
+3. **Get data:**
 
-For Mac/Linux:
+Data can be accessed in three different ways: 
+A) Download from a Zenodo dataset repository (Allen, 2025; DOI: 10.5281/zenodo.17024920), unzip the 'data' folder from the Zenodo repo in the 'analysis' folder associated with this Github repo. This option is the most straightforward if you do not need to extend the anlaysis to sites beyond the 97 associated with the current study.
+B) Use the data download & cleaning scripts in this Github repo (run the python scripts in the order listed in the Key Scripts section above).
+C) Access via the URLs in associated references below (though this option is not recommended, as the exact format and structure of the data may vary slightly from the ones above, making subsequent analysis more difficult).
+
+
+3. **Run analysis and visualize results:**
+
+If you chose option A above (downloaded data via Zenodo), then the daily and aggregated forecast skill metrics have already been calculated, and you can run the remaining two primary scripts in the workflow (`bayesian_analysis_basinchar.py` and `plot_results_main.py`).
+
+If you chose option B above and have run all of the scripts in the *Data download & cleaning* section of Key Scripts, then you'll need to run the metric calculation scripts followed by the Bayesian analysis and results visualization scripts (in order: `calculate_metric_daily.py`, `calculate_metric_aggregated.py`, `bayesian_analysis_basinchar.py`, and `plot_results_main.py`).
+
+To see the results of the Monte Carlo simulation described in the supplementary information, run `reliability_sensitivity_analysis.py`.
+
+To run all of the scripts, you can also run the following shell script:
   ```bash
   bash run_all_scripts.sh
   ```
-
-For Windows PowerShell:
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File run_all_scripts.ps1
-  ```
-
 ---
 
 ## References
-CNRFC. (2025a). California Nevada River Forecast Center (CNRFC) Short Range Hourly Ensemble Data Archive. [Dataset] Retrieved from https://www.cnrfc.noaa.gov/ensembleHourlyProductCSV.php on June 20, 2025.
 
+Allen, M. C. (2025). Streamflow Forecasts, Observations, Basin Characteristics, AR Recon Records, and Forecast Skill Metrics for Sites in California, Nevada, and Oregon (Water Years 2014–2025). [Dataset]. https://doi.org/10.5281/ZENODO.17024920
+
+CNRFC. (2025a). California Nevada River Forecast Center (CNRFC) Short Range Hourly Ensemble Data Archive. [Dataset] Retrieved from https://www.cnrfc.noaa.gov/ensembleHourlyProductCSV.php on June 20, 2025.
 
 CW3E. (2025). Center for Western Weather and Water Extremes (CW3E) Atmospheric River Reconnaissance daily AR data collection and integration. [Data set]. Retrieved from https://cw3e.ucsd.edu/arrecon_overview/ on July 16, 2025.
 
