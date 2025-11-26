@@ -173,6 +173,7 @@ def plot_decadal_metric():
         # Colorbar
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
         cbar = fig.colorbar(sm, ax=axes[0, i], orientation='vertical', fraction=0.05)
+        cbar.ax.tick_params(labelsize=11)
         if metric == 'RMSE_norm':
             cbar.set_label('Average Decadal Normalized RMSE', fontsize=axis_font_size)
         elif metric == 'eCRPS_mean_std':
@@ -207,6 +208,7 @@ def plot_decadal_metric():
         ax.xaxis.set_major_locator(MaxNLocator(nbins=6))#, steps=[1, 2, 5, 10]))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=6))#, steps=[1, 2, 5, 10]))
         ax.grid(True)
+        ax.tick_params(labelsize=11)
 
         # Labels
         if metric == 'RMSE_norm':
@@ -781,6 +783,8 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
             pos_color = hex_dark_yellow
             neg_color = hex_dark_blue
             neutral_color = 'white'
+
+            
             
             if min_val > 0:
                 norm = Normalize(vmin=min_val, vmax=max_val)
@@ -836,7 +840,7 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
         filename.unlink()
     plt.savefig(filename, dpi=300)
     #plt.show()
-
+    
 
 def plot_beta_time_positive():
     sel_metrics = ['RMSE']
