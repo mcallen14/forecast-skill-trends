@@ -743,6 +743,7 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
     leads = [1, 5]
     fig, axes = plt.subplots(2, 3, figsize=(14, 10))
     axes = axes.reshape(2, 3) 
+    axis_font_size = 20
 
     for row_idx, lead in enumerate(leads):
         for col_idx, met in enumerate(selected_metrics):
@@ -780,8 +781,6 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
             pos_color = hex_dark_yellow
             neg_color = hex_dark_blue
             neutral_color = 'white'
-
-            
             
             if min_val > 0:
                 norm = Normalize(vmin=min_val, vmax=max_val)
@@ -813,8 +812,8 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
             sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
             sm.set_array([])
             cbar = fig.colorbar(sm, ax=ax, orientation='vertical', fraction=0.04, pad=0.01)
-            cbar.set_label(r'Median $\beta_{time}$', fontsize=10)
-            cbar.ax.tick_params(labelsize=8)
+            cbar.set_label(r'Median $\beta_{time}$', fontsize=(axis_font_size-3))
+            cbar.ax.tick_params(labelsize=10)
 
             # Subplot title for top row (metrics)
             if row_idx == 0:
@@ -824,11 +823,11 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
                     title = 'Reliability'
                 else:
                     title = met
-                ax.set_title(title, fontsize=16, pad=10)
+                ax.set_title(title, fontsize=axis_font_size, pad=10)
 
             # Y-axis label for left column (lead times)
             if col_idx == 0:
-                ax.set_ylabel(f'Lead {lead}', fontsize=16, labelpad=10)
+                ax.set_ylabel(f'Lead {lead}', fontsize=axis_font_size, labelpad=10)
 
     plt.tight_layout()#rect=[0, 0, 1, 1])
 
