@@ -134,6 +134,7 @@ def plot_decadal_metric():
     fig, axes = plt.subplots(2, 3, figsize=(16, 10), gridspec_kw={'height_ratios': [1.38, 1]})
     lead_xaxis = 1
     lead_yaxis = 5
+    axis_font_size = 16
 
     # top row: maps of average performance metrics
     df_merged = ID_table.copy().reset_index(drop=True)[['CNRFC_id', 'LNG_GAGE', 'LAT_GAGE']].merge(
@@ -173,13 +174,13 @@ def plot_decadal_metric():
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
         cbar = fig.colorbar(sm, ax=axes[0, i], orientation='vertical', fraction=0.05)
         if metric == 'RMSE_norm':
-            cbar.set_label('Average Decadal Normalized RMSE', fontsize=12)
+            cbar.set_label('Average Decadal Normalized RMSE', fontsize=axis_font_size)
         elif metric == 'eCRPS_mean_std':
-            cbar.set_label('Average Decadal Normalized eCRPS', fontsize=12)
+            cbar.set_label('Average Decadal Normalized eCRPS', fontsize=axis_font_size)
         elif metric == 'rel':
-            cbar.set_label('Average Decadal Reliability', fontsize=12)
+            cbar.set_label('Average Decadal Reliability', fontsize=axis_font_size)
         else:
-            cbar.set_label(f'Average {metric}', fontsize=12)
+            cbar.set_label(f'Average {metric}', fontsize=axis_font_size)
 
     # bottom row - scatter plots comparing lead times
     for i, metric in enumerate(selected_metrics_decadal):
@@ -209,17 +210,17 @@ def plot_decadal_metric():
 
         # Labels
         if metric == 'RMSE_norm':
-            ax.set_xlabel(f'Normalized RMSE Lead {lead_xaxis}', fontsize=12)
-            ax.set_ylabel(f'Normalized RMSE Lead {lead_yaxis}', fontsize=12)
+            ax.set_xlabel(f'Normalized RMSE Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Normalized RMSE Lead {lead_yaxis}', fontsize=axis_font_size)
         elif metric == 'eCRPS_mean_std':
-            ax.set_xlabel(f'Normalized eCRPS Lead {lead_xaxis}', fontsize=12)
-            ax.set_ylabel(f'Normalized eCRPS Lead {lead_yaxis}', fontsize=12)
+            ax.set_xlabel(f'Normalized eCRPS Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Normalized eCRPS Lead {lead_yaxis}', fontsize=axis_font_size)
         elif metric == 'rel':
-            ax.set_xlabel(f'Reliability Lead {lead_xaxis}', fontsize=12)
-            ax.set_ylabel(f'Reliability Lead {lead_yaxis}', fontsize=12)
+            ax.set_xlabel(f'Reliability Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Reliability Lead {lead_yaxis}', fontsize=axis_font_size)
         else:
-            ax.set_xlabel(f'Lead {lead_xaxis}', fontsize=12)
-            ax.set_ylabel(f'Lead {lead_yaxis}', fontsize=12)
+            ax.set_xlabel(f'Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Lead {lead_yaxis}', fontsize=axis_font_size)
 
     # Global Title
     fig.suptitle(f'Decadal Forecast Performance', fontsize=20)
