@@ -3,3 +3,4 @@ venv-forecast1/
 .DS_Store
 code/__pycache__/
 *.py[cod]
+code/scrap_code_not_tracked.ipynb
