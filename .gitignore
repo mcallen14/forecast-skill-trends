@@ -4,4 +4,5 @@ venv-forecast1/
 code/__pycache__/
 *.py[cod]
 code/scrap_code_not_tracked.ipynb
+code/scrap_code_not_tracked_desktop1.ipynb
 code/scrap_code_not_tracked2.ipynb
