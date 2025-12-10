@@ -230,6 +230,162 @@ def plot_decadal_metric():
     plt.savefig(folder_path / f'Decadal_performance.png', dpi=300, bbox_inches='tight')
     #plt.show()
 
+# Same as top row in figure above, but for all other lead times
+def plot_decadal_metric_long_leads():
+    """
+    Creates a multi-row map figure where:
+    - Each row = a lead time (excluding lead 1)
+    - Each column = one performance metric
+    - Color scale is fixed per metric across all leads
+    - Each panel keeps its own colorbar
+    """
+    leads_to_plot = [3, 5, 7, 10, 14]
+    n_leads = len(leads_to_plot)
+    n_metrics = len(selected_metrics_decadal)
+
+    fig, axes = plt.subplots(
+        nrows=n_leads,
+        ncols=n_metrics,
+        figsize=(13, 4 * n_leads),
+        squeeze=False
+    )
+
+    axis_font_size = 16
+
+    # Merge site coordinates
+    df_merged = ID_table.copy().reset_index(drop=True)[
+        ['CNRFC_id', 'LNG_GAGE', 'LAT_GAGE']
+    ].merge(
+        df_metric_decade,
+        how='right',
+        left_on='CNRFC_id',
+        right_on='site'
+    )
+
+    # ----- Precompute color norms per metric across all leads -----
+    metric_norms = {}
+    metric_cmaps = {}
+    for metric in selected_metrics_decadal:
+        vals = df_merged[df_merged['lead'].isin(leads_to_plot)][metric].dropna()
+        vmin_10, vmax_90 = np.percentile(vals, [10, 90])
+
+        if vmin_10 > 0:
+            norm = Normalize(vmin=vmin_10, vmax=vmax_90)
+            cmap = LinearSegmentedColormap.from_list(
+                "custom_cmap",
+                [hex_colors[3], hex_light_blue, hex_colors[1]]
+            )
+        elif vmax_90 < 0:
+            norm = Normalize(vmin=vmin_10, vmax=vmax_90)
+            cmap = LinearSegmentedColormap.from_list(
+                "custom_cmap",
+                ['mediumblue', 'white']
+            )
+        else:
+            max_range = max(abs(vmin_10), abs(vmax_90))
+            norm = TwoSlopeNorm(vmin=-max_range, vcenter=0, vmax=max_range)
+            cmap = LinearSegmentedColormap.from_list(
+                "custom_cmap",
+                ['mediumblue', 'white', 'firebrick']
+            )
+
+        metric_norms[metric] = norm
+        metric_cmaps[metric] = cmap
+
+    # Loop over leads (ROWS)
+    for row_idx, lead_val in enumerate(leads_to_plot):
+        metric_df = df_merged[df_merged['lead'] == lead_val]
+
+        gdf_base = gpd.GeoDataFrame(
+            metric_df,
+            geometry=gpd.points_from_xy(
+                metric_df['LNG_GAGE'],
+                metric_df['LAT_GAGE']
+            ),
+            crs="EPSG:4269"
+        ).to_crs(epsg=3857)
+
+        # Loop over metrics (COLUMNS)
+        for col_idx, metric in enumerate(selected_metrics_decadal):
+            ax = axes[row_idx, col_idx]
+            gdf = gdf_base.copy()
+            cmap = metric_cmaps[metric]
+            norm = metric_norms[metric]
+
+            # Plot map
+            gdf.plot(
+                ax=ax,
+                color=[cmap(norm(val)) for val in gdf[metric]],
+                markersize=50,
+                edgecolor='k',
+                alpha=0.8
+            )
+
+            ctx.add_basemap(
+                ax,
+                source=ctx.providers.Esri.WorldTopoMap,
+                alpha=0.7,
+                attribution=""
+            )
+
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            # Titles
+            if row_idx == 0:
+                if metric == 'RMSE_norm':
+                    ax.set_title('Normalized RMSE', fontsize=axis_font_size)
+                elif metric == 'eCRPS_mean_std':
+                    ax.set_title('Normalized eCRPS', fontsize=axis_font_size)
+                elif metric == 'rel':
+                    ax.set_title('Reliability', fontsize=axis_font_size)
+                else:
+                    ax.set_title(metric, fontsize=axis_font_size)
+
+            if col_idx == 0:
+                ax.set_ylabel(
+                    f'Lead {lead_val}',
+                    fontsize=axis_font_size,
+                    rotation=90,
+                    labelpad=12
+                )
+
+            # Colorbar for each panel
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+            cbar = fig.colorbar(
+                sm,
+                ax=ax,
+                orientation='vertical',
+                fraction=0.046,
+                pad=0.02
+            )
+            cbar.ax.tick_params(labelsize=11)
+            if metric == 'RMSE_norm':
+                cbar.set_label('Normalized RMSE', fontsize=axis_font_size)
+            elif metric == 'eCRPS_mean_std':
+                cbar.set_label('Normalized eCRPS', fontsize=axis_font_size)
+            elif metric == 'rel':
+                cbar.set_label('Reliability', fontsize=axis_font_size)
+            else:
+                cbar.set_label(f'Avg {metric}', fontsize=axis_font_size)
+
+    fig.suptitle(
+        'Average Decadal Forecast Performance by Lead Time',
+        fontsize=20,
+        y=0.995
+    )
+
+    plt.tight_layout()
+
+
+    plt.savefig(
+        folder_path / "Average_Decadal_Performance_All_Leads_Maps_colorBarFixed.png",
+        dpi=300,
+        bbox_inches='tight'
+    )
+
+    # plt.show()
+
 
 def create_trace_with_placeholders(trace, required_vars):
     new_data = {}
@@ -1515,6 +1671,7 @@ for agg_type in aggregation_periods:
 
         # PLOTS:
         plot_decadal_metric()
+        plot_decadal_metric_long_leads()
         plot_mu_wet_time_lead_comp()
         plot_model_comp_waic()
         plot_model_comp_waic_ld15()
