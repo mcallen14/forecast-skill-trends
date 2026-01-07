@@ -1,6 +1,6 @@
 # Characterizing Improvements in Ensemble Forecast Performance Over the Last Decade: A Retrospective Analysis of the Hydrologic Ensemble Forecast Service (HEFS)
 
-This repository contains code and data processing workflows for analyzing the performance of the **Hydrologic Ensemble Forecast Service (HEFS)** at the **California–Nevada River Forecast Center (CNRFC)**. The analysis evaluates whether operational streamflow forecasts have improved since HEFS implementation in 2014, and what factors influence forecast performance across sites, lead times, and hydrologic regimes. An associated paper has been submitted for peer review (Allen & Steinschneider, 2025), and will be added to this README when available.  
+This repository contains code and data processing workflows for analyzing the performance of the **Hydrologic Ensemble Forecast Service (HEFS)** at the **California–Nevada River Forecast Center (CNRFC)**. The analysis evaluates whether operational streamflow forecasts have improved since HEFS implementation in 2014, and what factors influence forecast performance across sites, lead times, and hydrologic regimes. An associated paper has been submitted for peer review (Allen & Steinschneider, 2026), and will be added to this README when available.  
 
 ---
 
@@ -149,11 +149,11 @@ To run all of the scripts, you can also run the following shell script:
 
 ## References
 
-Allen, M. C. (2025). Streamflow Forecasts, Observations, Basin Characteristics, AR Recon Records, and Forecast Skill Metrics for Sites in California, Nevada, and Oregon (Water Years 2014–2025). [Dataset]. https://doi.org/10.5281/ZENODO.17024920
+Allen, M. C. (2025). Streamflow Forecasts, Observations, Basin Characteristics, AR Recon Records, and Forecast Performance Metrics for Sites in California, Nevada, and Oregon (Water Years 2014–2025). [Dataset]. https://doi.org/10.5281/ZENODO.17024920
 
-Allen, M. C. & Steinschneider, S. (2025). Characterizing Improvements in Ensemble Forecast Skill Over the Last Decade: A Retrospective Analysis of the Hydrologic Ensemble Forecast Service (HEFS). [Manuscript submitted for publication].
+Allen, M. C. & Steinschneider, S. (2026). Characterizing Improvements in Ensemble Forecast Performance Over the Last Decade: A Retrospective Analysis of the Hydrologic Ensemble Forecast Service (HEFS). [Manuscript submitted for publication].
 
-CNRFC. (2025a). California Nevada River Forecast Center (CNRFC) Short Range Hourly Ensemble Data Archive. [Dataset] Retrieved from https://www.cnrfc.noaa.gov/ensembleHourlyProductCSV.php on June 20, 2025.
+CNRFC. (2025). California Nevada River Forecast Center (CNRFC) Short Range Hourly Ensemble Data Archive. [Dataset] Retrieved from https://www.cnrfc.noaa.gov/ensembleHourlyProductCSV.php on June 20, 2025.
 
 CW3E. (2025). Center for Western Weather and Water Extremes (CW3E) Atmospheric River Reconnaissance daily AR data collection and integration. [Data set]. Retrieved from https://cw3e.ucsd.edu/arrecon_overview/ on July 16, 2025.
 

@@ -1,7 +1,7 @@
 """
 Steinschneider Lab Group
 Madeline Allen
-Code last updated: 7/28/2025
+Code last updated: 12/20/2026
 Script purpose: plot results from  Bayesian hierarcical model analysis
 
 This project utilizes code generated with the assistance of OpenAI's ChatGPT (July, 2025). 
