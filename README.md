@@ -1,6 +1,10 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18175944.svg)](https://doi.org/10.5281/zenodo.18175944)
+
 # Characterizing Improvements in Ensemble Forecast Performance Over the Last Decade: A Retrospective Analysis of the Hydrologic Ensemble Forecast Service (HEFS)
 
-This repository contains code and data processing workflows for analyzing the performance of the **Hydrologic Ensemble Forecast Service (HEFS)** at the **California–Nevada River Forecast Center (CNRFC)**. The analysis evaluates whether operational streamflow forecasts have improved since HEFS implementation in 2014, and what factors influence forecast performance across sites, lead times, and hydrologic regimes. An associated paper has been submitted for peer review (Allen & Steinschneider, 2026), and will be added to this README when available.  
+This repository contains code and data processing workflows for analyzing the performance of the **Hydrologic Ensemble Forecast Service (HEFS)** at the **California–Nevada River Forecast Center (CNRFC)**. The analysis evaluates whether operational streamflow forecasts have improved since HEFS implementation in 2014, and what factors influence forecast performance across sites, lead times, and hydrologic regimes. 
+
+An associated manuscript has been submitted for peer review (Allen & Steinschneider, 2026). The version of the code used in that analysis is archived on Zenodo as **v1.0.0** (DOI: 10.5281/zenodo.18175944).
 
 ---
 
