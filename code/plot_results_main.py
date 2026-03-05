@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.ticker import MaxNLocator
 from matplotlib.colors import Normalize, TwoSlopeNorm, LinearSegmentedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import geopandas as gpd
 import contextily as ctx
 import arviz as az
@@ -116,7 +118,7 @@ def compile_model_results_basinchar():
     return model_results, model_list
 
 
-def plot_decadal_metric():
+def plot_decadal_metric_old():
     """
     Creates a 2-row figure with:
     - Top row: Maps of average performance metrics.
@@ -229,6 +231,166 @@ def plot_decadal_metric():
     plt.tight_layout()
     plt.savefig(folder_path / f'Decadal_performance.png', dpi=300, bbox_inches='tight')
     #plt.show()
+
+#Redo of above - minor formatting revisions 
+def plot_decadal_metric():
+    """
+    Creates a 2-row figure with:
+    - Top row: Maps of average performance metrics (colorbars on the LEFT, without shrinking map axes).
+    - Bottom row: Scatter plots comparing performance metrics between lead times.
+    """
+
+    fig, axes = plt.subplots(
+        2, 3, figsize=(16, 10),
+        gridspec_kw={'height_ratios': [1.38, 1]}
+    )
+
+    lead_xaxis = 1
+    lead_yaxis = 5
+    axis_font_size = 17
+    title_font_size = 21
+    tick_font_size = 14
+
+    # top row: maps of average performance metrics
+    df_merged = ID_table.copy().reset_index(drop=True)[['CNRFC_id', 'LNG_GAGE', 'LAT_GAGE']].merge(
+        df_metric_decade, how='right', left_on='CNRFC_id', right_on='site'
+    )
+    metric_df = df_merged[df_merged['lead'] == 1]
+
+    # Create a base GeoDataFrame
+    gdf_base = gpd.GeoDataFrame(
+        metric_df,
+        geometry=gpd.points_from_xy(metric_df['LNG_GAGE'], metric_df['LAT_GAGE']),
+        crs="EPSG:4269"
+    ).to_crs(epsg=3857)
+
+    main_color = hex_colors[3]
+    label_pad = 8
+
+    # --- TOP ROW: MAPS ---
+    for i, metric in enumerate(selected_metrics_decadal):
+        gdf = gdf_base.copy()
+
+        # Define color normalization
+        vmin_90_10, vmax_90_10 = np.percentile(gdf[metric], [10, 90])
+        if vmin_90_10 > 0:
+            norm = Normalize(vmin=vmin_90_10, vmax=vmax_90_10)
+            cmap = LinearSegmentedColormap.from_list(
+                "custom_cmap", [hex_colors[3], hex_light_blue, hex_colors[1]]
+            )
+        elif vmax_90_10 < 0:
+            norm = Normalize(vmin=vmin_90_10, vmax=vmax_90_10)
+            cmap = LinearSegmentedColormap.from_list("custom_cmap", ['mediumblue', 'white'])
+        else:
+            max_range = max(abs(vmin_90_10), abs(vmax_90_10))
+            norm = TwoSlopeNorm(vmin=-max_range, vcenter=0, vmax=max_range)
+            cmap = LinearSegmentedColormap.from_list("custom_cmap", ['mediumblue', 'white', 'firebrick'])
+
+        axm = axes[0, i]
+        axm.set_xticks([])
+        axm.set_yticks([])
+
+        gdf.plot(
+            ax=axm,
+            color=[cmap(norm(val)) for val in gdf[metric]],
+            markersize=50,
+            edgecolor='k',
+            alpha=0.8
+        )
+        ctx.add_basemap(axm, source=ctx.providers.Esri.WorldTopoMap, alpha=0.7, attribution="")
+        
+        # ---- Colorbar on LEFT (does NOT resize the map axis) ----
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+
+        divider = make_axes_locatable(axm)
+        cax_full = divider.append_axes("left", size="5%", pad=0.08)  # full-height container
+
+        # Make a shorter axis INSIDE the full cax
+        cax = inset_axes(
+            cax_full,
+            width="100%",
+            height="85%",     
+            loc="center",
+            borderpad=0
+        )
+
+        # Hide the container axis (so only the inset colorbar shows)
+        cax_full.set_axis_off()
+
+        cbar = fig.colorbar(sm, cax=cax, orientation='vertical')
+        cbar.ax.tick_params(labelsize=tick_font_size)
+        cbar.ax.yaxis.set_ticks_position('left')
+        cbar.ax.yaxis.set_label_position('left')
+
+        # Titles + colorbar labels
+        if metric == 'RMSE_norm':
+            axm.set_title("RMSE", fontsize=title_font_size, pad=10)
+            cbar.set_label('Normalized RMSE', fontsize=axis_font_size, labelpad=label_pad)
+        elif metric == 'eCRPS_mean_std':
+            axm.set_title("eCRPS", fontsize=title_font_size, pad=10)
+            cbar.set_label('Normalized eCRPS', fontsize=axis_font_size, labelpad=label_pad)
+        elif metric == 'rel':
+            axm.set_title("Reliability", fontsize=title_font_size, pad=10)
+            cbar.set_label('Reliability', fontsize=axis_font_size, labelpad=label_pad)
+        else:
+            axm.set_title(f"{metric}", fontsize=title_font_size, pad=10)
+            cbar.set_label(f'{metric}', fontsize=axis_font_size, labelpad=label_pad)
+
+
+    # --- BOTTOM ROW: SCATTERS ---
+    for i, metric in enumerate(selected_metrics_decadal):
+        df_pivot = df_merged[df_merged['lead'].isin([lead_xaxis, lead_yaxis])][['site', 'lead', metric]]
+        df_wide = df_pivot.pivot(index='site', columns='lead', values=metric).dropna()
+
+        x_vals = df_wide[lead_xaxis]
+        y_vals = df_wide[lead_yaxis]
+
+        ax = axes[1, i]
+
+        # ---- Spacer axis on LEFT to match top-row colorbar footprint ----
+        divider = make_axes_locatable(ax)
+        spacer = divider.append_axes("left", size="5%", pad=0.04)  # MUST match top-row size/pad
+        spacer.set_axis_off()  # invisible; just reserves space
+
+        ax.scatter(x_vals, y_vals, c=main_color, alpha=0.5, label='Forecast Points')
+
+        all_vals = np.concatenate([x_vals.values, y_vals.values])
+        buffer = (all_vals.max() - all_vals.min()) * 0.05
+        lims = [all_vals.min() - buffer, all_vals.max() + buffer]
+        ax.plot(lims, lims, 'k--', linewidth=1, label='1:1 Line')
+        ax.set_xlim(lims)
+        ax.set_ylim(lims)
+
+        ax.set_aspect('equal', adjustable='box')
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=6))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
+        ax.grid(True)
+        ax.tick_params(labelsize=tick_font_size)
+
+        if metric == 'RMSE_norm':
+            ax.set_xlabel(f'Normalized RMSE Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Normalized RMSE Lead {lead_yaxis}', fontsize=axis_font_size)
+        elif metric == 'eCRPS_mean_std':
+            ax.set_xlabel(f'Normalized eCRPS Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Normalized eCRPS Lead {lead_yaxis}', fontsize=axis_font_size)
+        elif metric == 'rel':
+            ax.set_xlabel(f'Reliability Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Reliability Lead {lead_yaxis}', fontsize=axis_font_size)
+        else:
+            ax.set_xlabel(f'Lead {lead_xaxis}', fontsize=axis_font_size)
+            ax.set_ylabel(f'Lead {lead_yaxis}', fontsize=axis_font_size)
+
+    # Tighter spacing now that colorbars no longer distort the top row
+    set_w_space = 0.05
+    fig.subplots_adjust(wspace=set_w_space, hspace=0.05, right=0.96)
+
+    plt.savefig(
+        folder_path / (
+            f'Figure1.png'
+        ),
+        dpi=600, bbox_inches='tight'
+    )
 
 # Same as top row in figure above, but for all other lead times
 def plot_decadal_metric_long_leads():
@@ -645,7 +807,7 @@ def plot_global_params_mu_ld15():
     plt.close()
 
 
-def plot_mu_wet_time_lead_comp():
+def plot_mu_wet_time_lead_comp_old():
      # Figure for paper - wet + time comparison
     hdi_prob_selected = 0.90
 
@@ -739,6 +901,109 @@ def plot_mu_wet_time_lead_comp():
     # Show the plot
     #plt.show()
 
+# Rewrite of code above, minor changes on formatting
+
+def plot_mu_wet_time_lead_comp():
+
+    title_font_size = 14
+    legend_font_size = 11
+    legend_title_size = 12
+    x_axis_tick_font_size = 13
+
+     # Figure for paper - wet + time comparison
+    hdi_prob_selected = 0.90
+
+    # Create the figure with 3 subplots
+    fig, axes = plt.subplots(len(selected_metrics), 1, figsize=(8, 8))  # Vertical layout for the subplots
+
+    # If there's only one subplot, make sure it's iterable
+    if len(selected_metrics) == 1:
+        axes = [axes]
+
+    # Define the labeller to map 'mu_wet' and 'mu_time' to custom labels
+    labeller = azl.mix_labellers((azl.MapLabeller, azl.DimCoordLabeller, azl.NoModelLabeller))(var_name_map={"mu_wet": r"$\mu$ wet", "mu_time": r"$\mu$ time"})
+
+    # Iterate through each metric and subplot
+    for i, met in enumerate(selected_metrics):
+
+        model_list_wet_time = []
+
+        for lead in selected_lead_times:
+            model_name = f"{met}_wet_time_ld{lead}"
+            if model_name in model_results and model_name not in model_list_wet_time:
+                model_list_wet_time.append(model_name)
+
+        print('model_list_wet_time', model_list_wet_time)
+        # Number of models for color palette
+        num_models = len(model_list_wet_time)
+        
+        custom_palette = hex_colors[:len(model_list_wet_time)]
+
+        prepared_traces = [
+            model_results[model]['trace']
+            for model in model_list_wet_time
+        ]
+
+        # Plot the forest plot on the respective axis (subplot)
+        az.plot_forest(
+            prepared_traces,
+            model_names=model_list_wet_time,
+            var_names=['mu_wet', 'mu_time'],  # Variables to plot (must match the model's names)
+            combined=True,
+            hdi_prob=hdi_prob_selected,
+            figsize=(3, 6),  # Adjust figsize for subplots
+            colors=custom_palette,
+            ax=axes[i],  # Pass the specific axis for each subplot
+            labeller=labeller,  # Use the labeller here
+            legend=False,
+        )
+
+        # Add vertical reference line at 0
+        axes[i].axvline(0, color='black', linestyle='--', linewidth=1)
+        axes[i].tick_params(axis='x', labelsize=x_axis_tick_font_size)
+
+        # Set the title based on the metric name
+        if met == 'eCRPS_mean':
+            axes[i].set_title('eCRPS', fontsize=title_font_size)
+        elif met == 'rel':
+            axes[i].set_title('Reliability', fontsize=title_font_size)
+        else:
+            axes[i].set_title(met, fontsize=title_font_size)  # Keep 'RMSE' as it is
+
+        # Create custom legend using Line2D (all legends for subfigs are the same)
+        if i == 0:
+            lead_labels = [f"Lead {model.split('_ld')[1]}" for model in model_list_wet_time]
+            handles = [mlines.Line2D([0], [0], color=custom_palette[idx], lw=4) for idx in range(num_models)]
+
+        axes[i].grid(True, linestyle="--", alpha=0.5)  
+
+
+    # Adjust layout to prevent overlapping of titles and axes labels
+    plt.tight_layout(rect=[0, 0, 0.88, 1])
+
+    # Shared legend to the right of the whole figure
+    leg = fig.legend(
+        handles,
+        lead_labels,
+        title="Lead Time",
+        loc='center left',
+        bbox_to_anchor=(0.88, 0.5),  # Adjust as needed
+        borderaxespad=0,
+        fontsize=legend_font_size
+    )
+    leg.get_title().set_fontsize(legend_title_size)
+
+    # Save figure (remove file if it already exists)
+    filename = folder_path / f'Figure2.png'
+
+    if filename.exists():
+        filename.unlink()  # Remove existing file if necessary
+    #plt.savefig(filename, dpi=300)
+    plt.savefig(filename, dpi=1000, bbox_inches='tight', pad_inches=0.05)
+
+    # Show the plot
+    #plt.show()
+
 
 def plot_model_comp_waic():
      for lead in selected_lead_times:
@@ -819,7 +1084,7 @@ def plot_model_comp_waic():
 
 
 # Same as above, but combining lead 1 and lead 5 subplots (lead 1 left column; lead 5 right column)
-def plot_model_comp_waic_ld15():
+def plot_model_comp_waic_ld15_old():
     leads = [1, 5]
     n_rows = len(selected_metrics)
     fig, axes = plt.subplots(n_rows, 2, figsize=(12, 3.5 * n_rows), sharey=False)
@@ -895,8 +1160,91 @@ def plot_model_comp_waic_ld15():
         filename.unlink()
     plt.savefig(filename, dpi=300, bbox_inches='tight')
 
+# Minor rewrite of code above, formatting changes for final figure publication
 
-def plot_beta_time_maps(): #model_list, model_results, df=df_metric
+# Same as above, but combining lead 1 and lead 5 subplots (lead 1 left column; lead 5 right column)
+def plot_model_comp_waic_ld15():
+    title_fontsize = 16
+    x_axis_fontsize = 14
+    x_axis_tick_fontsize = 13
+    y_axis_fontsize = 13
+    legend_fontsize = 14
+
+    leads = [1, 5]
+    n_rows = len(selected_metrics)
+    fig, axes = plt.subplots(n_rows, 2, figsize=(12, 3.5 * n_rows), sharey=False)
+
+    if n_rows == 1:
+        axes = np.array([axes])  # Ensure axes is 2D even if one row
+
+    for col, lead in enumerate(leads):  # col=0 for lead 1, col=1 for lead 5
+        for row, met in enumerate(selected_metrics):
+            ax = axes[row, col]
+            model_results_traces = {}
+
+            # Filter model names for this metric and lead
+            pattern = re.compile(f"{met}_.+_ld{lead}")
+            model_list_filtered = [model for model in model_list if pattern.fullmatch(model)]
+
+            for m in model_list_filtered:
+                model_results_traces[m] = model_results[m]['trace']
+
+            if not model_results_traces:
+                ax.set_visible(False)
+                continue
+
+            # WAIC comparison
+            df_comp_waic = az.compare(compare_dict=model_results_traces, ic="waic")
+            models = df_comp_waic.index[::-1]
+            y_pos = np.arange(len(models))
+
+            elpd_waic = df_comp_waic["elpd_waic"].values[::-1]
+            waic = -2 * elpd_waic
+            waic_2se = 2 * df_comp_waic["se"].values[::-1] * 2
+            best_waic = np.min(waic)
+
+            # Format labels like "AR + Qobs"
+            formatted_labels = [
+                model.replace(f"{met}_", "").replace(f"_ld{lead}", "").replace("_", " + ") for model in models
+            ]
+
+            # Plot
+            ax.errorbar(waic, y_pos, xerr=waic_2se, fmt='o', label="WAIC ± 2SE", color=hex_colors[0], capsize=4)
+            ax.axvline(x=best_waic, color='grey', linestyle='--', label='Best WAIC')
+
+            # Show y-axis labels for both subplots
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(formatted_labels, fontsize=y_axis_fontsize)
+            ax.set_xlabel('WAIC', fontsize=x_axis_fontsize)
+            ax.tick_params(axis='x', labelsize=x_axis_tick_fontsize)
+            ax.grid(True, linestyle="--", alpha=0.5)
+
+            # Title per subplot
+            if met == 'eCRPS_mean':
+                ax.set_title(f'eCRPS (Lead {lead})', fontsize=title_fontsize )
+            elif met == 'rel':
+                ax.set_title(f'Reliability (Lead {lead})', fontsize=title_fontsize)
+            else:
+                ax.set_title(f'{met} (Lead {lead})', fontsize=title_fontsize)
+
+    # Place shared legend to the right
+    handles = [
+        mlines.Line2D([], [], color=hex_colors[0], marker='o', linestyle='None', label='WAIC ± 2SE'),
+        mlines.Line2D([], [], color='grey', linestyle='--', label='Best WAIC')
+    ]
+    
+    # legend below:
+    fig.legend(handles=handles, loc='lower center', bbox_to_anchor=(0.5, -0.02), ncol=2, fontsize=legend_fontsize)
+    plt.tight_layout(rect=[0, 0.02, 1, 1])
+
+    filename = folder_path / f'Figure4.png'
+    if filename.exists():
+        filename.unlink()
+    plt.savefig(filename, dpi=600, bbox_inches='tight')
+
+
+
+def plot_beta_time_maps_old(): #model_list, model_results, df=df_metric
     selected_metrics = ['RMSE', 'eCRPS_mean', 'rel']
     leads = [1, 5]
     fig, axes = plt.subplots(2, 3, figsize=(14, 10))
@@ -996,7 +1344,112 @@ def plot_beta_time_maps(): #model_list, model_results, df=df_metric
         filename.unlink()
     plt.savefig(filename, dpi=300)
     #plt.show()
+
+# Rewrite of code above; minor formatting changes for final figure publication
+
+def plot_beta_time_maps(): #model_list, model_results, df=df_metric
+    selected_metrics = ['RMSE', 'eCRPS_mean', 'rel']
+    leads = [1, 5]
+    fig, axes = plt.subplots(2, 3, figsize=(14, 10))
+    axes = axes.reshape(2, 3) 
+    axis_font_size = 21
+    axis_tick_font_size = 13
+    beta_font_size = 17
+
+    for row_idx, lead in enumerate(leads):
+        for col_idx, met in enumerate(selected_metrics):
+            ax = axes[row_idx][col_idx]
+            model_name = f"{met}_wet_time_ld{lead}"
+
+            if model_name not in model_list:
+                print(f"Model {model_name} not found in model_list.")
+                continue
+
+            trace = model_results[model_name]['trace']
+
+            posterior_medians = [
+                np.median(trace.posterior['beta_time'].values[:, :, site_index])
+                for site_index in range(len(selected_sites))
+            ]
+
+            medians_df = pd.DataFrame({
+                'site': selected_sites,
+                'posterior_param_medians': posterior_medians
+            })
+
+            merged_df = ID_table.copy().reset_index(drop=True)[['CNRFC_id', 'LNG_GAGE', 'LAT_GAGE']].merge(
+                medians_df, how = 'right', left_on='CNRFC_id', right_on='site'
+            )
+
+            gdf = gpd.GeoDataFrame(
+                merged_df,
+                geometry=gpd.points_from_xy(merged_df['LNG_GAGE'], merged_df['LAT_GAGE']),
+                crs="EPSG:4269"
+            ).to_crs(epsg=3857)
+
+            min_val, max_val = gdf['posterior_param_medians'].min(), gdf['posterior_param_medians'].max()
+        
+            pos_color = hex_dark_yellow
+            neg_color = hex_dark_blue
+            neutral_color = 'white'
+            
+            if min_val > 0:
+                norm = Normalize(vmin=min_val, vmax=max_val)
+                colors = [neutral_color, pos_color]
+            elif max_val < 0:
+                norm = Normalize(vmin=min_val, vmax=max_val)
+                colors = [neg_color, neutral_color]
+            else:
+                max_range = max(abs(min_val), abs(max_val))
+                norm = TwoSlopeNorm(vmin=-max_range, vcenter=0, vmax=max_range)
+                colors = [neg_color, neutral_color, pos_color]
+
+            cmap = LinearSegmentedColormap.from_list("custom_cmap", colors)
+
+            gdf.plot(
+                ax=ax,
+                color=[cmap(norm(v)) for v in gdf['posterior_param_medians']],
+                markersize=50, edgecolor='k', alpha=0.8
+            )
+
+            x_min, y_min, x_max, y_max = gdf.total_bounds
+            ax.set_xlim(x_min - 0.1 * (x_max - x_min), x_max + 0.1 * (x_max - x_min))
+            ax.set_ylim(y_min - 0.1 * (y_max - y_min), y_max + 0.1 * (y_max - y_min))
+
+            ctx.add_basemap(ax, source=ctx.providers.Esri.WorldTopoMap, alpha=0.7, attribution="")
+            ax.set_xticks([]); ax.set_yticks([])
+
+            # Colorbar
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+            sm.set_array([])
+            cbar = fig.colorbar(sm, ax=ax, orientation='vertical', fraction=0.04, pad=0.03)
+            cbar.set_label(r'Median $\beta_{time}$', fontsize=(beta_font_size))
+            cbar.ax.tick_params(labelsize=axis_tick_font_size)
+
+            # Subplot title for top row (metrics)
+            if row_idx == 0:
+                if met == 'eCRPS_mean':
+                    title = 'eCRPS'
+                elif met == 'rel':
+                    title = 'Reliability'
+                else:
+                    title = met
+                ax.set_title(title, fontsize=axis_font_size, pad=10)
+
+            # Y-axis label for left column (lead times)
+            if col_idx == 0:
+                ax.set_ylabel(f'Lead {lead}', fontsize=axis_font_size, labelpad=10)
+
+    plt.tight_layout()#rect=[0, 0, 1, 1])
+    fig.subplots_adjust(left=0.04, wspace=0.35, hspace=0.03)
+
+    filename = folder_path / f'Figure3.png'
+    if filename.exists():
+        filename.unlink()
+    plt.savefig(filename, dpi=600)
+    #plt.show()
     
+
 
 def plot_beta_time_positive():
     sel_metrics = ['RMSE']
